@@ -1,5 +1,8 @@
 name: CI - Payment Functions
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: ["main"]
@@ -9,7 +12,6 @@ on:
 jobs:
   build_and_test:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,7 +25,7 @@ jobs:
 
       - name: Install SonarScanner for .NET
         run: dotnet tool install --global dotnet-sonarscanner
-      
+
       - name: Remove sonar-project.properties
         run: rm -f sonar-project.properties
 
@@ -36,27 +38,33 @@ jobs:
             /o:"estudosfiapfcg" \
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.token="${SONAR_TOKEN}" \
-            /d:sonar.qualitygate.wait=true \
+            /d:sonar.projectBaseDir="${{ github.workspace }}" \
             /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml" \
             /d:sonar.coverage.exclusions="**/*Program.cs,**/*Startup.cs" \
-            /d:sonar.exclusions="**/.github/**,**/build/**,**/obj/**"
+            /d:sonar.exclusions="**/.github/**,**/ci/**,**/cd/**,**/build/**,**/obj/**"
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore Fiap.FCG.Payment.Functions.sln
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build Fiap.FCG.Payment.Functions.sln --configuration Release --no-restore
 
-      - name: Test with coverage
+      - name: Test with coverage (OpenCover)
         run: |
-          dotnet test \
-            --configuration Release \
-            --no-build \
+          dotnet test test/Fiap.FCG.Payment.Functions.Unit.Test/Fiap.FCG.Payment.Functions.Unit.Test.csproj \
+            --configuration Release --no-build --logger "trx;LogFileName=test-results.trx" \
             /p:CollectCoverage=true \
-            /p:CoverletOutputFormat=opencover \
-            /p:CoverletOutput=TestResults/coverage.opencover.xml
+            /p:CoverletOutput=${{ github.workspace }}/test/Fiap.FCG.Payment.Functions.Unit.Test/TestResults/coverage.opencover.xml \
+            /p:CoverletOutputFormat=opencover
 
       - name: SonarCloud End
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: dotnet-sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
+
+      - name: SonarCloud Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1
+        with:
+          scanMetadataReportFile: .sonarqube/out/.sonar/report-task.txt
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
