@@ -1,0 +1,23 @@
+[
+  {
+    "name": "ProcessarComprasFunction",
+    "scriptFile": "Fiap.FCG.Payment.Functions.dll",
+    "entryPoint": "Fiap.FCG.Payment.Functions.Functions.ProcessarComprasFunction.Run",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "message",
+        "direction": "In",
+        "type": "serviceBusTrigger",
+        "dataType": "String",
+        "queueName": "compras-realizadas",
+        "connection": "SERVICEBUS_CONNECTION",
+        "cardinality": "One",
+        "properties": {}
+      }
+    ]
+  }
+]
