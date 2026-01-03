@@ -23,7 +23,7 @@ jobs:
 
       - name: Install SonarScanner for .NET
         run: dotnet tool install --global dotnet-sonarscanner
-      
+
       - name: Remove sonar-project.properties
         run: rm -f sonar-project.properties
 
@@ -50,12 +50,13 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Test with coverage (OpenCover)
-        working-directory: Fiap.FCG.Payment.Functions
         run: |
-          dotnet test test/Fiap.FCG.Payment.Functions.Unit.Test/Fiap.FCG.Payment.Functions.Unit.Test.csproj \
-            --configuration Release --no-build --logger "trx;LogFileName=test-results.trx" \
+          dotnet test Fiap.FCG.Payment.Functions.Unit.Test/Fiap.FCG.Payment.Functions.Unit.Test.csproj \
+            --configuration Release \
+            --no-build \
+            --logger "trx;LogFileName=test-results.trx" \
             /p:CollectCoverage=true \
-            /p:CoverletOutput=${{ github.workspace }}/Fiap.FCG.Payment.Functions/test/Fiap.FCG.Payment.Functions.Unit.Test/TestResults/coverage.opencover.xml \
+            /p:CoverletOutput=${{ github.workspace }}/Fiap.FCG.Payment.Functions.Unit.Test/TestResults/coverage.opencover.xml \
             /p:CoverletOutputFormat=opencover
 
       - name: SonarCloud End
